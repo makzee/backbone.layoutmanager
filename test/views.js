@@ -7,12 +7,12 @@ QUnit.module("views", {
 
     // Override the default template fetching behavior such that the tests can
     // run in the absense of the DOM (for Node.js). Store a reference to the
-    // default `fetch` method to be restored in the teardown of this test
+    // default `fetchTemplate` method to be restored in the teardown of this test
     // module.
-    this.origFetch = Backbone.Layout.prototype.options.fetch;
+    this.origFetch = Backbone.Layout.prototype.options.fetchTemplate;
 
     Backbone.Layout.configure({
-      fetch: function(name) {
+      fetchTemplate: function(name) {
         return _.template(testUtil.templates[name]);
       },
 
@@ -98,7 +98,7 @@ QUnit.module("views", {
 
   teardown: function() {
     Backbone.Layout.configure({
-      fetch: this.origFetch
+      fetchTemplate: this.origFetch
     });
 
     // Remove `supressWarnings: true`.
@@ -746,7 +746,7 @@ asyncTest("Views getting appended in the wrong order", 3, function() {
 
     template: "testing",
 
-    fetch: function(name) {
+    fetchTemplate: function(name) {
       var done = this.async();
 
       setTimeout(function() {
@@ -778,7 +778,7 @@ test("Re-rendering of inserted views causes append at the end of the list", 1, f
 
     template: "<%= msg %>",
 
-    fetch: function(name) {
+    fetchTemplate: function(name) {
       return _.template(name);
     },
 
@@ -793,7 +793,7 @@ test("Re-rendering of inserted views causes append at the end of the list", 1, f
   var list = new Backbone.Layout({
     template: "<tbody></tbody>",
 
-    fetch: function(name) {
+    fetchTemplate: function(name) {
       return _.template(name);
     },
     
@@ -828,7 +828,7 @@ test("afterRender() not called on item added with insertView()", 2, function() {
   var Item = Backbone.Layout.extend({
     template: "",
 
-    fetch: function(path) {
+    fetchTemplate: function(path) {
       return _.template(path);
     },
 
@@ -854,7 +854,7 @@ test("afterRender() not called on item added with insertView()", 2, function() {
   var List = Backbone.Layout.extend({
     template: "<tbody></tbody>",
 
-    fetch: function(path) {
+    fetchTemplate: function(path) {
       return _.template(path);
     },
 
@@ -876,12 +876,12 @@ test("afterRender() not called on item added with insertView()", 2, function() {
 test("Render doesn't work inside insertView", 1, function() {
   var V = Backbone.Layout.extend({
     template: "<p class='inner'><%= lol %></p>",
-    fetch: function(path) { return _.template(path); }
+    fetchTemplate: function(path) { return _.template(path); }
   });
 
   var n = new Backbone.Layout({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); }
+    fetchTemplate: function(path) { return _.template(path); }
   });
 
   n.render();
@@ -912,14 +912,14 @@ test("afterRender not firing", 1, function() {
   var hit = false;
   var l = new Backbone.Layout({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); }
+    fetchTemplate: function(path) { return _.template(path); }
   });
 
   l.render();
 
   var V = Backbone.Layout.extend({
     template: "<span>hey</span>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     afterRender: function() {
       hit = true;
@@ -935,7 +935,7 @@ test("multiple subclasses afterRender works", 1, function() {
   var hit = 0;
   var SubClass1 = Backbone.Layout.extend({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     afterRender: function() {
       hit--;
@@ -944,7 +944,7 @@ test("multiple subclasses afterRender works", 1, function() {
 
   var SubClass2 = SubClass1.extend({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     afterRender: function lol() {
       hit++;
@@ -953,7 +953,7 @@ test("multiple subclasses afterRender works", 1, function() {
 
   var ParentTest = Backbone.Layout.extend({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     beforeRender: function() {
       this.setView("", new SubClass2());
@@ -962,7 +962,7 @@ test("multiple subclasses afterRender works", 1, function() {
 
   var Test = Backbone.Layout.extend({
     template: "<p></p>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     triggerRender: function() {
       this.insertView("p", new ParentTest()).render();
@@ -1000,8 +1000,8 @@ test("Views cannot be removed once added to a Layout", 3, function() {
 
 // https://github.com/tbranyen/backbone.layoutmanager/issues/150
 asyncTest("Views intermittently render multiple times", 1, function() {
-  // Simulating fetch, should only execute once per template and then cache.
-  function fetch(name) {
+  // Simulating fetchTemplate, should only execute once per template and then cache.
+  function fetchTemplate(name) {
     var done = this.async();
     
     setTimeout(function() {
@@ -1020,12 +1020,12 @@ asyncTest("Views intermittently render multiple times", 1, function() {
 
   var View1 = Backbone.Layout.extend({
     template: "view1",
-    fetch: fetch
+    fetchTemplate: fetchTemplate
   });
 
   var ListItem = Backbone.Layout.extend({
     template: "listItem",
-    fetch: fetch,
+    fetchTemplate: fetchTemplate,
 
     serialize: function() {
       return { item: this.model.get("item") };
@@ -1034,7 +1034,7 @@ asyncTest("Views intermittently render multiple times", 1, function() {
 
   var View2 = Backbone.Layout.extend({
     template: "view2",
-    fetch: fetch,
+    fetchTemplate: fetchTemplate,
       
     beforeRender: function() {
       this.collection.each(function(model) {
@@ -1045,12 +1045,12 @@ asyncTest("Views intermittently render multiple times", 1, function() {
 
   var View3 = Backbone.Layout.extend({
     template: "view3",
-    fetch: fetch
+    fetchTemplate: fetchTemplate
   });
 
   var main = new Backbone.Layout({
     template: "view0",
-    fetch: fetch
+    fetchTemplate: fetchTemplate
   });
 
   main.setView(".view0", new View1());
@@ -1075,7 +1075,7 @@ test("remove method not working as expected", function() {
 
   var list = new Backbone.Layout({
     template: "<ul></ul>",
-    fetch: function(path) { return _.template(path); },
+    fetchTemplate: function(path) { return _.template(path); },
 
     views: {
       "ul": [
@@ -1112,7 +1112,7 @@ asyncTest("beforeRender and afterRender called twice in async", 3, function() {
   var Item = Backbone.Layout.extend({
     template: "lol",
 
-    fetch: function(path) {
+    fetchTemplate: function(path) {
       var done = this.async();
 
       setTimeout(function() {
@@ -1130,7 +1130,7 @@ asyncTest("beforeRender and afterRender called twice in async", 3, function() {
       hitAfter = hitAfter + 1;
     },
     
-    render: function(tmpl, data) {
+    renderTemplate: function(tmpl, data) {
       renderNum++;
       return tmpl(data);
     },
@@ -1143,7 +1143,7 @@ asyncTest("beforeRender and afterRender called twice in async", 3, function() {
   var List = Backbone.Layout.extend({
     template: "<tbody></tbody>",
 
-    fetch: function(path) {
+    fetchTemplate: function(path) {
       var done = this.async();
 
       setTimeout(function() {
@@ -1335,7 +1335,7 @@ test("correctly remove inserted child views", function() {
 
     template: "<%= msg %>",
 
-    fetch: function(name) {
+    fetchTemplate: function(name) {
       return _.template(name);
     },
 
@@ -1352,7 +1352,7 @@ test("correctly remove inserted child views", function() {
   var list = new Backbone.Layout({
     template: "<tbody></tbody>",
 
-    fetch: function(name) {
+    fetchTemplate: function(name) {
       return _.template(name);
     },
     
@@ -1440,9 +1440,9 @@ asyncTest("Allow async custom rendering of templates", 1, function() {
   var Test = Backbone.View.extend({
     manage: true,
     template: "Hello World!",
-    fetch: _.identity,
+    fetchTemplate: _.identity,
 
-    render: function(template, data) {
+    renderTemplate: function(template, data) {
       var done = this.async();
 
       setTimeout(function() {
@@ -1464,7 +1464,7 @@ test("cleanup hit", 1, function() {
   var View = Backbone.View.extend({
     manage: true,
 
-    render: function() {
+    renderTemplate: function() {
       ok(false);
     },
 
@@ -1483,11 +1483,11 @@ test("cleanup hit", 1, function() {
 
 asyncTest("Duplicate sub-views are removed when their parent view is rendered repeatedly", 1, function() {
   var ListItemView = Backbone.Layout.extend({
-    // Set a template source so Layout calls this view's `fetch` method
+    // Set a template source so Layout calls this view's `fetchTemplate` method
     // (the actual value is unimportant for this test)
     template: "#bogus",
-    // Generic asynchronous `fetch` method
-    fetch: function(name) {
+    // Generic asynchronous `fetchTemplate` method
+    fetchTemplate: function(name) {
       var done = this.async();
       setTimeout(function() {
         done(_.template(""));
@@ -1511,7 +1511,7 @@ asyncTest("Duplicate sub-views are removed when their parent view is rendered re
 test("Scoping nested view assignment selector to parent", 1, function() {
   var layout = new Backbone.Layout({
     template: _.template("<div class='test'></div>"),
-    fetch: _.identity,
+    fetchTemplate: _.identity,
 
     views: {
       ".test": new Backbone.Layout({
@@ -1531,12 +1531,12 @@ test("'insertView' uses user-defined `insert` method", 2, function() {
   var hit = false;
   var layout = new Backbone.Layout({
     template: _.template("<div class='test'>World</div>"),
-    fetch: _.identity
+    fetchTemplate: _.identity
   });
 
   layout.insertView(".test", new Backbone.Layout({
       template: _.template("Hello"),
-      fetch: _.identity,
+      fetchTemplate: _.identity,
       insert: function($root, child) {
         $root.before(child);
         hit = true;
@@ -1703,12 +1703,12 @@ asyncTest("Ordering sub-views with varying render delays", 1, function() {
   var Outside = Backbone.View.extend({
     manage: true,
     template: "[outside]",
-    fetch: _.template
+    fetchTemplate: _.template
   });
   var Inside = Backbone.View.extend({
     manage: true,
     template: "[inside]",
-    fetch: function(str) {
+    fetchTemplate: function(str) {
       var done = this.async();
       setTimeout(function() {
         done(_.template(str));
@@ -1966,10 +1966,10 @@ test("templates should be trimmed before insertion", 1, function() {
   var layout = new Backbone.Layout({
     template: "tpl",
     el: false,
-    fetch: function() {
+    fetchTemplate: function() {
       return "\n <div>Hey</div>\n ";
     },
-    render: function( tpl ) {
+    renderTemplate: function( tpl ) {
       return tpl;
     }
   });
@@ -2102,14 +2102,14 @@ test("removeView fails if no subView exists.", 1, function() {
   }
 });
 
-// Ensure non-function, non-string, values are passed to `fetch`.
+// Ensure non-function, non-string, values are passed to `fetchTemplate`.
 test("object template", 1, function() {
   var testObject = { contents: "Here" };
 
   var View = Backbone.Layout.extend({
     template: testObject,
 
-    fetch: function(template) {
+    fetchTemplate: function(template) {
       equal(template, testObject, "Correct object is passed");
     }
   });
@@ -2142,7 +2142,7 @@ asyncTest("renderViews will only render the children and not parent", 2, functio
 
     template: "hello",
 
-    fetch: function(template) {
+    fetchTemplate: function(template) {
       var done = this.async();
 
       // Simulate async.
